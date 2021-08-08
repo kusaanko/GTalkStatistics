@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTalk Statistics</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="title">
+        <h1>GTalk Statistics</h1>
+        <p>LINEの統計を見る。トーク履歴を可視化する。</p>
+        <div class="dot_pattern"></div>
+    </div>
+    <div id="body">
+        <h1 id="title_heading">GTalk Statistics</h1>
+        <p>LINEのトーク履歴から統計を出すサイトです。</p>
+        <p>LINEにはトーク履歴をテキストに出力する機能があるので、活用してみました。</p>
+        <p>トーク履歴からトークの分布など様々な情報が見れます。</p>
+        <p>トーク履歴を頻繁に消す人にはあまり向いていません。何年分もあると面白いです。</p>
+        <p class="bold">※このサイトはLINE株式会社と一切関係ありません。このサイトを利用して発生した問題等を絶対にLINE株式会社及びその関連会社に報告しないでください。</p>
+        <p class="bold">※また、このサイトを利用して発生した問題には一切関与しません。全て自己責任でお願いします。</p>
+        <h1 id="private_mode_alert" style="color: red;">このサイトでは個人情報を取り扱うため、プライベートモードでの利用が推奨です。</h1>
+        <h1 id="private_mode_alert" style="color: red;">
+            拡張機能を利用している場合はできる限り無効にするか、プライベートモードやゲストモードなどの拡張機能がない環境にしてください。有効にするのは100%信頼できるものだけにしてください。</h1>
+        <div class="topic_box">
+            <h1>プライバシーについて</h1>
+            <p>全ての処理をサーバーで行わずユーザーのデバイス上で行います。なにかを送信することはありませんのでご安心ください。</p>
+            <p class="bold">ただし、ブラウザやブラウザの拡張機能などによって個人情報を読み取られる可能性があるので、拡張機能を利用している方は気をつけてください。</p>
+            <p class="bold">シークレットモードやプライベートモード、ゲストモードなど拡張機能がない環境で使用するのが望ましいです。</p>
+            <p>GTalk Statisticsが情報をどこかに送信することはありません。</p>
+        </div>
+        <div class="topic_box">
+            <h1>トーク履歴のテキスト化の方法</h1>
+            <p>右上のメニューボタン、その他、トーク履歴を送信でテキスト化できます。あとはファイルを保存してそのままスマホでファイルを解析したりパソコンに転送したりしてください。</p>
+            <p id="steps"><img src="img/step1.jpg" alt="step1"><img src="img/step2.jpg" alt="step2"><img
+                    src="img/step3.jpg" alt="step3"></p>
+            <h1 id="private_mode_alert" style="color: red;">用意したテキストファイルは誰でも簡単に読めます。このサイトで遊び終わったら必ず完全に消去しましょう。</h1>
+        </div>
+        <p>準備ができたら、ファイルを読み込んで解析を開始しましょう！</p>
+        <input id="file" type="file" accept="text/plain"><br>
+        <p><input id="submit" type="submit" value="解析開始"></p>
+        <div id="user_replace" style="display: none;">
+            <h1>ユーザー名の置換</h1>
+            <p>もし、誰かに見せたいときにLINEの表示名のままでは嫌だ、というときのために用意しました。</p>
+            <p>あと、グラフの色を設定できます。</p>
+            <p>設定後、再度解析をしてください。</p>
+            <p><input id="edit_user_replace" type="button" value="ユーザー名の置換を設定する"></p>
+            <p><input id="edit_user_replace_message" type="checkbox"><label
+                    for="edit_user_replace_message">メッセージ内も全て置換する</label></p>
+            <div id="user_replace_dialog" class="dialog" style="display: none;">
+                <div class="dialog_box">
+                    <p class="close">×</p>
+                    <table id="user_replace_table">
+                        <tr>
+                            <td>元の名前</td>
+                            <td>置換後</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="main">
+        </div>
+    </div>
+    <div class="footer">
+        <div id="footer">
+            <h1>GTalk Statistics</h1>
+            <a href="https://github.com/kusaanko/GTalkStatistics" target="_blank" rel="noopener">Source Code</a>
+            <p id="copyright">Copyright© Kusaanko 2021. All rights reserved.</p>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js"
+        integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.0/chart.min.js"
+        integrity="sha512-asxKqQghC1oBShyhiBwA+YgotaSYKxGP1rcSYTDrB0U6DxwlJjU59B67U8+5/++uFjcuVM8Hh5cokLjZlhm3Vg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://d3js.org/d3.v5.min.js" charset="utf-8" crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+    <script type="text/javascript" src="js/d3.layout.cloud.js"></script>
+    <script type="text/javascript" src="js/kuromoji.js/kuromoji.js"></script>
+    <script src="gtalk_statistics.js"></script>
+</body>
+
+</html>

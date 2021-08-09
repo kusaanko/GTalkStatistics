@@ -34,8 +34,8 @@ self.addEventListener('message', (msg) => {
             if (char == '\r') continue;
             if (char == '\n') {
                 // 日付の行
-                if (getIndexOfs(line, '/').length == 2 && !isNaN(parseInt(line.substr(0, 4))) && !isNaN(parseInt(line.substr(5, 2))) && !isNaN(Date.parse(line))) {
-                    date = Date.parse(line);
+                if (line.length == 13 && getIndexOfs(line, '/').length == 2 && !isNaN(parseInt(line.substr(0, 4))) && !isNaN(parseInt(line.substr(5, 2))) && !isNaN(parseInt(line.substr(8, 2)))) {
+                    date = Date.UTC(parseInt(line.substr(0, 4)), parseInt(line.substr(5, 2)) - 1, parseInt(line.substr(8, 2)));
                     mode = 0;
                     stock = '';
                 } else {

@@ -79,14 +79,6 @@ $('#submit').on('click', function () {
                         user_replace[sender] = '';
                     }
                 }
-                for (let user of Object.keys(user_id)) {
-                    let id = user_id[user];
-                    $('tr.' + id).remove();
-                    $('#user_replace_table').append('<tr class="' + id + '"><td>' + user + '</td><td><input type="input" id="' + id + '" placeholder="' + user + '" value="' + user_replace[user] + '"><input type="color" id="' + id + '_color" value="' + user_color[user] + '"></td></tr>')
-                    $('#' + id + '_color').change(function () {
-                        user_color[user] = $('#' + id + '_color').val();
-                    });
-                }
                 main_jq.append('<h1>解析したデータの詳細</h1>');
                 main_jq.append('<p>メッセージ数:' + data.messages.all.length + '</p>');
                 for (let sender of data.senders) {
@@ -206,7 +198,6 @@ $('#submit').on('click', function () {
                         backgroundColor: sender_color[sender]
                     });
                 }
-                var aspectRatio = window.innerWidth / (window.innerHeight * 0.7);
                 drawChart(
                     '時間帯別　メッセージ数',
                     ['0時', '1時', '2時', '3時', '4時', '5時', '6時', '7時', '8時', '9時', '10時', '11時', '12時',
@@ -462,7 +453,7 @@ function genWordCloud(data) {
     body.html('');
     var body_div = document.getElementById('word_cloud');
     {
-        body.append('<div id="cloud" style="display: none"></div>');
+        body.append('<div id="cloud"></div>');
         drawWordCloud('#cloud', data.statistics.all.words);
         var canvas = document.createElement('canvas');
         canvas.id = 'cloud_canvas';
@@ -471,10 +462,11 @@ function genWordCloud(data) {
         canvas.style.maxWidth = '600px';
         body_div.appendChild(canvas);
         svg2canvas(document.getElementById('cloud').children[0], canvas, data.senders.join('と'));
+        $('#cloud').remove();
     }
     for (let sender of data.senders) {
         var id = generateUuid();
-        body.append('<div id="cloud_' + id + '" style="display: none"></div>');
+        body.append('<div id="cloud_' + id + '"></div>');
         drawWordCloud('#cloud_' + id, data.statistics[sender].words);
         var canvas = document.createElement('canvas');
         canvas.id = 'cloud_' + id + '_canvas';
@@ -483,6 +475,7 @@ function genWordCloud(data) {
         canvas.style.maxWidth = '600px';
         body_div.appendChild(canvas);
         svg2canvas(document.getElementById('cloud_' + id).children[0], canvas, sender);
+        $('#cloud_' + id).remove();
     }
 }
 

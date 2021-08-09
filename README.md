@@ -27,7 +27,7 @@ GTalkはGreen Talkです。適当につけました。
 
 # 使用ライブラリ
  - jQuery - https://github.com/jquery/jquery
- - Chart.js - https://github.com/chartjs/Chart.js
+ - Google Charts - https://developers.google.com/chart/interactive/docs
  - D3.js - https://github.com/d3/d3
  - d3-cloud - https://github.com/jasondavies/d3-cloud
  - kuromoji.js - https://github.com/takuyaa/kuromoji.js

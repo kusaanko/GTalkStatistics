@@ -4,6 +4,8 @@ var user_id = {};
 var user_replace = {};
 var user_color = {};
 
+google.charts.load('current', { 'packages': ['bar'] });
+
 $('#submit').on('click', function () {
     $('#submit').hide();
     $('#user_replace').hide();
@@ -19,40 +21,40 @@ $('#submit').on('click', function () {
         }
         // ユーザー名の置換の設定
         user_replace = {};
-        for(let user of Object.keys(user_id)) {
+        for (let user of Object.keys(user_id)) {
             var name = $('#' + user_id[user]).val();
-            if(name != undefined && name != '') {
+            if (name != undefined && name != '') {
                 user_replace[user] = name;
             }
         }
         // Web Workerの設定
         const worker = new Worker('worker.js');
         // トーク履歴の解析開始
-        worker.postMessage({message: 'parse', data: text, user_replace: user_replace, do_user_replace_message: $('#edit_user_replace_message').is(':checked')});
+        worker.postMessage({ message: 'parse', data: text, user_replace: user_replace, do_user_replace_message: $('#edit_user_replace_message').is(':checked') });
         worker.onmessage = function (response) {
             var data = response.data;
-            if(data.indexOf && data.indexOf('status ') != -1) {
+            if (data.indexOf && data.indexOf('status ') != -1) {
                 $('#main').html('<p>' + data.substr(7) + '</p>');
-            }else {
+            } else {
                 // ワードクラウドのフィルターの設定
                 word_cloud_filter = data.filter;
-                for(let filter of word_cloud_filter) {
+                for (let filter of word_cloud_filter) {
                     word_cloud_filter_id[filter] = generateUuid();
                 }
                 // ユーザーの色
-                var sender_color = {all: '#d2275b80'};
-                for(let sender of data.original_senders) {
+                var sender_color = { all: '#d2275b80' };
+                for (let sender of data.original_senders) {
                     var u = sender;
-                    if(user_color[sender] == undefined) {
+                    if (user_color[sender] == undefined) {
                         var r = nextInt(255).toString(16);
                         var g = nextInt(255).toString(16);
                         var b = nextInt(255).toString(16);
-                        if(r.length == 1) r = '0' + r;
-                        if(g.length == 1) g = '0' + g;
-                        if(b.length == 1) b = '0' + b;
+                        if (r.length == 1) r = '0' + r;
+                        if (g.length == 1) g = '0' + g;
+                        if (b.length == 1) b = '0' + b;
                         user_color[sender] = '#' + r + g + b;
                     }
-                    if(user_replace[sender] != undefined) {
+                    if (user_replace[sender] != undefined) {
                         u = user_replace[sender];
                     }
                     sender_color[u] = user_color[sender] + '80';
@@ -62,26 +64,26 @@ $('#submit').on('click', function () {
                 main_jq.html('');
                 // ユーザー名の置換
                 $('#user_replace').show();
-                $('#edit_user_replace').on('click', function() {
+                $('#edit_user_replace').on('click', function () {
                     $('#user_replace_dialog').show();
                 });
-                $('#user_replace_dialog div .close').on('click', function() {
+                $('#user_replace_dialog div .close').on('click', function () {
                     $('#user_replace_dialog').hide();
                 });
-                for(let sender of data.original_senders) {
-                    if(user_id[sender] == undefined) {
+                for (let sender of data.original_senders) {
+                    if (user_id[sender] == undefined) {
                         var id = generateUuid();
                         user_id[sender] = id;
                     }
-                    if(user_replace[sender] == undefined) {
+                    if (user_replace[sender] == undefined) {
                         user_replace[sender] = '';
                     }
                 }
-                for(let user of Object.keys(user_id)) {
+                for (let user of Object.keys(user_id)) {
                     let id = user_id[user];
                     $('tr.' + id).remove();
                     $('#user_replace_table').append('<tr class="' + id + '"><td>' + user + '</td><td><input type="input" id="' + id + '" placeholder="' + user + '" value="' + user_replace[user] + '"><input type="color" id="' + id + '_color" value="' + user_color[user] + '"></td></tr>')
-                    $('#' + id +'_color').change(function() {
+                    $('#' + id + '_color').change(function () {
                         user_color[user] = $('#' + id + '_color').val();
                     });
                 }
@@ -104,28 +106,56 @@ $('#submit').on('click', function () {
                 main_jq.append('<p>最初のメッセージ:' + first_message_date.getFullYear() + '年' + (first_message_date.getMonth() + 1) + '月' + first_message_date.getDate() + '日' + '</p>');
                 main_jq.append('<p>最後のメッセージ:' + last_message_date.getFullYear() + '年' + (last_message_date.getMonth() + 1) + '月' + last_message_date.getDate() + '日' + '</p>');
                 // 棒グラフ表示関数
-                function addBarGraph(title, labels, datasets, options = {}) {
-                    var canvas = document.createElement('canvas');
+                function drawChart(title, labels, datasets) {
+                    var div = document.createElement('div');
                     main_jq.append('<h1>' + title + '</h1>');
-                    main_div.appendChild(canvas);
-                    var chart = new Chart(canvas, {
-                        type: 'bar',
-                        data: {
-                            labels: labels,
-                            datasets: datasets
+                    main_div.appendChild(div);
+                    div.style.width = div.parentElement.clientWidth;
+                    div.style.height = div.parentElement.clientWidth / (window.innerWidth / (window.innerHeight * 0.7));
+
+                    var label_name = ['日付'];
+
+                    var raw_data = [];
+
+                    for (let label of labels) {
+                        raw_data.push([label]);
+                    }
+                    for (let dataset of datasets) {
+                        label_name.push(dataset.label);
+                        var i = 0;
+                        for (i = 0; i < dataset.data.length; i++) {
+                            let d = dataset.data[i];
+                            raw_data[i].push(d);
+                        }
+                    }
+                    raw_data.unshift(label_name);
+                    var data = google.visualization.arrayToDataTable(raw_data);
+                    var options = {
+                        chart: {
+                            title: title,
                         },
-                        options: Object.assign({
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: title
-                                }
-                            },
-                        }, options)
+                        width: div.parentElement.clientWidth,
+                        height: div.parentElement.clientWidth / (window.innerWidth / (window.innerHeight * 0.7)),
+                    };
+
+                    options = google.charts.Bar.convertOptions(options);
+
+                    var chart = new google.charts.Bar(div);
+                    chart.draw(data, options);
+
+                    let _div = div;
+                    let _data = data;
+                    let _options = options;
+
+                    $(window).resize(function () {
+                        var chart = new google.charts.Bar(_div);
+                        _options.width = div.parentElement.clientWidth;
+                        _options.height = div.parentElement.clientWidth / (window.innerWidth / (window.innerHeight * 0.7));
+                        chart.draw(_data, _options);
                     });
                 }
                 main_jq.append('<h1>操作方法</h1>');
-                main_jq.append('<p>軸の上にマウスや指を持っていくと細かい数値が読み取れます。上にある軸の名前をクリックやタップすると非表示にできます。</p>');
+                main_jq.append('<p>軸の上にマウスや指を持っていくと細かい数値が読み取れます。右にある軸の名前をクリックやタップするとハイライトできます。</p>');
                 var time_datasets = [
                     {
                         label: '全員',
@@ -177,45 +207,25 @@ $('#submit').on('click', function () {
                     });
                 }
                 var aspectRatio = window.innerWidth / (window.innerHeight * 0.7);
-                addBarGraph(
+                drawChart(
                     '時間帯別　メッセージ数',
                     ['0時', '1時', '2時', '3時', '4時', '5時', '6時', '7時', '8時', '9時', '10時', '11時', '12時',
                         '13時', '14時', '15時', '16時', '17時', '18時', '19時', '20時', '21時', '22時', '23時'],
-                    time_datasets,
-                    {aspectRatio: aspectRatio,
-                        maintainAspectRatio: false,
-                        onResize: function(chart) {
-                            chart.resize(chart.width, chart.width / (window.innerWidth / (window.innerHeight * 0.7)));
-                        }});
-                addBarGraph(
+                    time_datasets);
+                drawChart(
                     '月別　メッセージ数',
                     ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-                    month_datasets,
-                    {aspectRatio: aspectRatio,
-                        maintainAspectRatio: false,
-                        onResize: function(chart) {
-                            chart.resize(chart.width, chart.width / (window.innerWidth / (window.innerHeight * 0.7)));
-                        }});
-                addBarGraph(
+                    month_datasets);
+                drawChart(
                     '日別　メッセージ数',
                     ['1日', '2日', '3日', '4日', '5日', '6日', '7日', '8日', '9日', '10日',
                         '11日', '12日', '13日', '14日', '15日', '16日', '17日', '18日', '19日', '20日',
                         '21日', '22日', '23日', '24日', '25日', '26日', '27日', '28日', '29日', '30日', '31日'],
-                    day_datasets,
-                    {aspectRatio: aspectRatio,
-                        maintainAspectRatio: false,
-                        onResize: function(chart) {
-                            chart.resize(chart.width, chart.width / (window.innerWidth / (window.innerHeight * 0.7)));
-                        }});
-                addBarGraph(
+                    day_datasets);
+                drawChart(
                     '年月別　メッセージ数',
                     Object.keys(data.statistics.all.year_month),
-                    year_month_datasets,
-                    {aspectRatio: aspectRatio,
-                        maintainAspectRatio: false,
-                        onResize: function(chart) {
-                            chart.resize(chart.width, chart.width / (window.innerWidth / (window.innerHeight * 0.7)));
-                        }});
+                    year_month_datasets);
                 main_jq.append('<h1>ワードクラウド</h1>');
                 main_jq.append('<p>発言が多かった単語が大きく表示されます。小さいと数回程度しか発言していません。</p>');
                 main_jq.append('<p>大きい単語ばかりだと普段使う単語に偏りがあります。小さい単語ばかりだと普段いろいろな単語を使用しています。</p>');
@@ -253,19 +263,19 @@ $('#submit').on('click', function () {
                             <p id="word_add_auto_status"></p>
                         </div>
                     </div>`);
-                $('#edit_cloud_filter').on('click', function() {
+                $('#edit_cloud_filter').on('click', function () {
                     $('#cloud_filter').show();
                 });
-                $('#cloud_filter div .close').on('click', function() {
+                $('#cloud_filter div .close').on('click', function () {
                     $('#cloud_filter').hide();
                 });
                 // フィルターを追加する
                 function add_word_filter(filter) {
                     // フィルターに追加できないものを除外
-                    if(filter.length == 1) {
+                    if (filter.length == 1) {
                         return;
                     }
-                    if(!word_cloud_filter_id[filter]) {
+                    if (!word_cloud_filter_id[filter]) {
                         var id = generateUuid();
                         word_cloud_filter.push(filter);
                         word_cloud_filter_id[filter] = id;
@@ -277,32 +287,32 @@ $('#submit').on('click', function () {
                     let id = word_cloud_filter_id[filter];
                     $('#word_filter_table').append('<tr class="' + id + '"><td id="' + id + '">' + filter + '</td><td><p style="cursor: pointer;color: #176dec;margin: 0;" class="' + id + '">削除</a></td></tr>');
                     // 削除クリック時
-                    $('p.' + id).on('click', function() {
+                    $('p.' + id).on('click', function () {
                         $('tr.' + id).remove();
                         word_cloud_filter = word_cloud_filter.filter(n => n != filter);
                         delete word_cloud_filter_id[filter];
                     });
                 }
                 // 初期状態のフィルターを追加
-                for(let key in word_cloud_filter_id) {
+                for (let key in word_cloud_filter_id) {
                     append_word_filter(key);
                 }
-                $('#add_filter').on('click', function() {
+                $('#add_filter').on('click', function () {
                     $('#word_filter_search').val('');
                     $('#word_filter_search').keyup();
                     var filter = $('#word_filter_input').val();
-                    if(filter.length == 1) {
+                    if (filter.length == 1) {
                         alert('1文字はワードクラウドに表示されないのでフィルターに追加する必要はありません。');
                         return;
                     }
                     $('#word_filter_input').val('');
                     add_word_filter(filter);
                 });
-                $('#clear_filter').on('click', function() {
+                $('#clear_filter').on('click', function () {
                     $('#word_filter_search').val('');
                     $('#word_filter_search').keyup();
-                    if(confirm('本当に全て消去してよろしいですか？')) {
-                        for(let key in word_cloud_filter_id) {
+                    if (confirm('本当に全て消去してよろしいですか？')) {
+                        for (let key in word_cloud_filter_id) {
                             $('tr.' + word_cloud_filter_id[key]).remove();
                         }
                         word_cloud_filter = [];
@@ -310,52 +320,52 @@ $('#submit').on('click', function () {
                     }
                 });
                 // 検索
-                $('#word_filter_search').keyup(function() {
+                $('#word_filter_search').keyup(function () {
                     var search = $('#word_filter_search').val();
-                    for(let key in word_cloud_filter_id) {
+                    for (let key in word_cloud_filter_id) {
                         $('tr.' + word_cloud_filter_id[key]).remove();
                     }
-                    if(search.length == 0) {
-                        for(let key in word_cloud_filter_id) {
+                    if (search.length == 0) {
+                        for (let key in word_cloud_filter_id) {
                             append_word_filter(key);
                         }
-                    }else {
-                        for(let key in word_cloud_filter_id) {
-                            if(key.indexOf(search) != -1) {
+                    } else {
+                        for (let key in word_cloud_filter_id) {
+                            if (key.indexOf(search) != -1) {
                                 append_word_filter(key);
                             }
                         }
                     }
                 });
-                $('#cloud_filter_auto div .close').on('click', function() {
+                $('#cloud_filter_auto div .close').on('click', function () {
                     $('#cloud_filter_auto').hide();
                     $('#cloud_filter').show();
                 });
-                $('#word_filter_auto_open').on('click', function() {
+                $('#word_filter_auto_open').on('click', function () {
                     $('#cloud_filter').hide();
                     $('#cloud_filter_auto').show();
                     $('#word_add_auto_name').prop('checked', true);
                     $('#word_add_auto_place_name').prop('checked', true);
                 });
                 // フィルターの自動検索開始
-                $('#word_add_auto_run').on('click', function() {
+                $('#word_add_auto_run').on('click', function () {
                     var check = [];
-                    if($('#word_add_auto_name').is(':checked')) {
+                    if ($('#word_add_auto_name').is(':checked')) {
                         check.push('人名');
                     }
-                    if($('#word_add_auto_place_name').is(':checked')) {
+                    if ($('#word_add_auto_place_name').is(':checked')) {
                         check.push('地域');
                     }
                     $('#word_add_auto_run').hide();
                     const worker = new Worker('js/get_names_and_place_names.js');
-                    worker.postMessage({messages: data.messages.all, check: check});
-                    worker.onmessage = function(response) {
+                    worker.postMessage({ messages: data.messages.all, check: check });
+                    worker.onmessage = function (response) {
                         var auto_data = response.data;
-                        if(auto_data.indexOf && auto_data.indexOf('status ') == 0) {
+                        if (auto_data.indexOf && auto_data.indexOf('status ') == 0) {
                             $('#word_add_auto_status').html(auto_data.substr(7));
-                        }else {
+                        } else {
                             // 自動検索完了
-                            for(let key of auto_data) {
+                            for (let key of auto_data) {
                                 add_word_filter(key);
                             }
                             $('#word_add_auto_run').show();
@@ -367,15 +377,15 @@ $('#submit').on('click', function () {
                 main_jq.append('<p><input id="regenerate_word_cloud" type="button" value="ワードクラウドを再生成"></p>');
                 main_jq.append('<p><input id="agree_personal_information" type="checkbox"><label for="agree_personal_information">個人情報の扱いを十分理解したのでワードクラウドを見る</label></p>');
                 main_jq.append('<div id="word_cloud" style="display: none;"></div>');
-                $('#regenerate_word_cloud').on('click', function() {
+                $('#regenerate_word_cloud').on('click', function () {
                     genWordCloud(data);
                     genRemarks();
                 });
                 genWordCloud(data);
-                $('#agree_personal_information').change(function() {
-                    if($('#agree_personal_information').is(':checked')) {
+                $('#agree_personal_information').change(function () {
+                    if ($('#agree_personal_information').is(':checked')) {
                         $('#word_cloud').css('display', 'block');
-                    }else {
+                    } else {
                         $('#word_cloud').css('display', 'none');
                     }
                 });
@@ -391,46 +401,46 @@ $('#submit').on('click', function () {
                     {
                         var words = [];
                         for (let word in data.statistics.all.words) {
-                            if(word.length == 1) continue;
+                            if (word.length == 1) continue;
                             // wwwは複数種類検知されやすい文字なのでブロック
-                            if(word.match(/^[wｗ]*$/)) continue;
+                            if (word.match(/^[wｗ]*$/)) continue;
                             // フィルターに入っている文字はブロック
-                            if(word_cloud_filter.includes(word)) continue;
-                            words.push({text: word, count: data.statistics.all.words[word]});
+                            if (word_cloud_filter.includes(word)) continue;
+                            words.push({ text: word, count: data.statistics.all.words[word] });
                         }
-                        words.sort(function(a, b) {
+                        words.sort(function (a, b) {
                             return b.count - a.count;
                         });
-                        if(words.length > 100) {
+                        if (words.length > 100) {
                             words = words.slice(0, 100);
                         }
                         parent.append('<div class="remarks"><table id="remarks_all"><tr><td>単語</td><td>回数</td></tr></table></div>');
                         var p = $('#remarks_all');
-                        for(let word of words) {
+                        for (let word of words) {
                             p.append('<tr><td>' + word.text + '</td><td>' + word.count + '</td></tr>');
                         }
                     }
-                    for(let sender of data.senders) {
+                    for (let sender of data.senders) {
                         parent.append('<h2>' + sender + '</h2>');
                         var words = [];
                         for (let word in data.statistics[sender].words) {
-                            if(word.length == 1) continue;
+                            if (word.length == 1) continue;
                             // wwwは複数種類検知されやすい文字なのでブロック
-                            if(word.match(/^[wｗ]*$/)) continue;
+                            if (word.match(/^[wｗ]*$/)) continue;
                             // フィルターに入っている文字はブロック
-                            if(word_cloud_filter.includes(word)) continue;
-                            words.push({text: word, count: data.statistics[sender].words[word]});
+                            if (word_cloud_filter.includes(word)) continue;
+                            words.push({ text: word, count: data.statistics[sender].words[word] });
                         }
-                        words.sort(function(a, b) {
+                        words.sort(function (a, b) {
                             return b.count - a.count;
                         });
-                        if(words.length > 100) {
+                        if (words.length > 100) {
                             words = words.slice(0, 100);
                         }
                         var id = generateUuid();
                         parent.append('<div class="remarks"><table id="remarks_' + id + '"><tr><td>単語</td><td>回数</td></tr></table></div>');
                         var p = $('#remarks_' + id);
-                        for(let word of words) {
+                        for (let word of words) {
                             p.append('<tr><td>' + word.text + '</td><td>' + word.count + '</td></tr>');
                         }
                     }
@@ -462,7 +472,7 @@ function genWordCloud(data) {
         body_div.appendChild(canvas);
         svg2canvas(document.getElementById('cloud').children[0], canvas, data.senders.join('と'));
     }
-    for(let sender of data.senders) {
+    for (let sender of data.senders) {
         var id = generateUuid();
         body.append('<div id="cloud_' + id + '" style="display: none"></div>');
         drawWordCloud('#cloud_' + id, data.statistics[sender].words);
@@ -480,17 +490,17 @@ function drawWordCloud(selector, wordsData) {
     // 描画しきれない分は捨てる
     var words = [];
     for (let word in wordsData) {
-        if(word.length == 1) continue;
+        if (word.length == 1) continue;
         // wwwは複数種類検知されやすい文字なのでブロック
-        if(word.match(/^[wｗ]*$/)) continue;
+        if (word.match(/^[wｗ]*$/)) continue;
         // フィルターに入っている文字はブロック
-        if(word_cloud_filter.includes(word)) continue;
-        words.push({text: word, count: wordsData[word]});
+        if (word_cloud_filter.includes(word)) continue;
+        words.push({ text: word, count: wordsData[word] });
     }
-    words.sort(function(a, b) {
+    words.sort(function (a, b) {
         return b.count - a.count;
     });
-    if(words.length > 400) {
+    if (words.length > 400) {
         words = words.slice(0, 400);
     }
 
@@ -499,7 +509,7 @@ function drawWordCloud(selector, wordsData) {
 
     var countMax = words[0].count;
     var sizeScale = d3.scaleLinear().domain([0, countMax]).range([2, 150]);
-    for(let word of words) {
+    for (let word of words) {
         word.size = sizeScale(word.count);
     }
 
@@ -559,7 +569,7 @@ function svg2canvas(svgElement, canvas, user) {
     var image = new Image;
     var svgData = new XMLSerializer().serializeToString(svgElement);
     image.src = 'data:image/svg+xml;charset=utf-8;base64,' + btoa(unescape(encodeURIComponent(svgData)));
-    
+
     image.onload = () => {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -569,4 +579,4 @@ function svg2canvas(svgElement, canvas, user) {
         ctx.fillText('のワードクラウド', (canvas.width - ctx.measureText('のワードクラウド').width) / 2, 200);
         ctx.drawImage(image, 0, canvas.height - canvas.width, canvas.width, canvas.width);
     };
-  }
+}

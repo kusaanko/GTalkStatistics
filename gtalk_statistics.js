@@ -79,6 +79,11 @@ $('#submit').on('click', function () {
                         user_replace[sender] = '';
                     }
                 }
+                for (let user of Object.keys(user_id)) {
+                    let id = user_id[user];
+                    $('tr.' + id).remove();
+                    $('#user_replace_table').append('<tr class="' + id + '"><td>' + user + '</td><td><input type="input" id="' + id + '" placeholder="' + user + '" value="' + user_replace[user] + '"></tr>')
+                }
                 main_jq.append('<h1>解析したデータの詳細</h1>');
                 main_jq.append('<p>メッセージ数:' + data.messages.all.length + '</p>');
                 for (let sender of data.senders) {

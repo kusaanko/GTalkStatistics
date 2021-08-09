@@ -1,6 +1,8 @@
 # GTalkStatistics
 LINEのトーク履歴から統計を作れます。
 
+Webページ https://gtalkstatistics.pages.dev/
+
 ※このサイトはLINE株式会社と一切関係ありません。このサイトを利用して発生した問題等を絶対にLINE株式会社及びその関連会社に報告しないでください。
 
 # 経緯

@@ -456,30 +456,44 @@ function nextInt(max, min = 0) {
 function genWordCloud(data) {
     var body = $('#word_cloud');
     body.html('');
-    var body_div = document.getElementById('word_cloud');
+    let body_div = document.getElementById('word_cloud');
     {
         body.append('<div id="cloud"></div>');
         drawWordCloud('#cloud', data.statistics.all.words);
-        var canvas = document.createElement('canvas');
+        let canvas = document.createElement('canvas');
         canvas.id = 'cloud_canvas';
         canvas.style.display = 'inline-block';
         canvas.style.width = '100%';
         canvas.style.maxWidth = '600px';
         body_div.appendChild(canvas);
-        svg2canvas(document.getElementById('cloud').children[0], canvas, data.senders.join('と'));
+        svg2canvas(document.getElementById('cloud').children[0], canvas, data.senders.join('と'), function(base64) {
+            let img = document.createElement('img');
+            img.src = base64;
+            img.style.width = '100%';
+            img.style.maxWidth = '800px';
+            body_div.appendChild(img);
+            canvas.remove();
+        });
         $('#cloud').remove();
     }
     for (let sender of data.senders) {
         var id = generateUuid();
         body.append('<div id="cloud_' + id + '"></div>');
         drawWordCloud('#cloud_' + id, data.statistics[sender].words);
-        var canvas = document.createElement('canvas');
+        let canvas = document.createElement('canvas');
         canvas.id = 'cloud_' + id + '_canvas';
         canvas.style.display = 'inline-block';
         canvas.style.width = '100%';
         canvas.style.maxWidth = '600px';
         body_div.appendChild(canvas);
-        svg2canvas(document.getElementById('cloud_' + id).children[0], canvas, sender);
+        svg2canvas(document.getElementById('cloud_' + id).children[0], canvas, sender, function(base64) {
+            let img = document.createElement('img');
+            img.src = base64;
+            img.style.width = '100%';
+            img.style.maxWidth = '800px';
+            body_div.appendChild(img);
+            canvas.remove();
+        });
         $('#cloud_' + id).remove();
     }
 }
@@ -520,7 +534,7 @@ function drawWordCloud(selector, wordsData) {
         .start();
 
     // ワードクラウド描画
-    function draw(words) {
+    function draw(drawWords) {
         d3.select(selector)
             .append('svg')
             .attr('class', 'ui fluid image')
@@ -530,7 +544,7 @@ function drawWordCloud(selector, wordsData) {
             .append('g')
             .attr('transform', 'translate(' + w / 2 + ',' + h / 2 + ')')
             .selectAll('text')
-            .data(words)
+            .data(drawWords)
             .enter().append('text')
             .style('font-size', function (d) { return d.size + 'px'; })
             .style('font-family', 'system-ui')
@@ -560,7 +574,7 @@ function generateUuid() {
     return chars.join('');
 }
 
-function svg2canvas(svgElement, canvas, user) {
+function svg2canvas(svgElement, canvas, user, imageData) {
     canvas.width = 2000;
     canvas.height = 2220;
     var ctx = canvas.getContext('2d');
@@ -576,5 +590,6 @@ function svg2canvas(svgElement, canvas, user) {
         ctx.fillText(user, (canvas.width - ctx.measureText(user).width) / 2, 100);
         ctx.fillText('のワードクラウド', (canvas.width - ctx.measureText('のワードクラウド').width) / 2, 200);
         ctx.drawImage(image, 0, canvas.height - canvas.width, canvas.width, canvas.width);
+        imageData(canvas.toDataURL('image/png').replace('image/png', 'octet/stream'));
     };
 }

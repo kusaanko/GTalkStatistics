@@ -158,6 +158,8 @@ self.addEventListener('message', (msg) => {
                 }
                 if (!skipWordSegment) {
                     function incrementWord(sender, word) {
+                        // 頻出語は削除
+                        if(['こと','ある','ない','した','する','したら','なる','http','https'].includes(word)) return;
                         if (statistics[sender].words[word] == undefined) {
                             statistics[sender].words[word] = 0;
                         }
@@ -188,16 +190,19 @@ self.addEventListener('message', (msg) => {
                         // 助動詞があれば動詞につなげる
                         if (word.pos == '動詞') {
                             w += surface;
-                        }
-                        if (word.pos == '助動詞' && w.length > 0) {
+                        }else if (word.pos == '助動詞' && w.length > 0) {
+                            w += surface;
+                        }else if (word.pos_detail_1 == '接尾' && w.length > 0) {
+                            w += surface;
+                        }else if (word.pos_detail_1 == '非自立' && w.length > 0) {
                             w += surface;
                         }
-                        if (w.length > 0 && word.pos != '動詞' && word.pos != '助動詞') {
+                        if (w.length > 0 && word.pos != '動詞' && word.pos != '助動詞' && word.pos != '形容詞') {
                             incrementWord(message.sender, w);
                             w = '';
                         }
                         if (surface.length <= 1) continue;
-                        if (word.pos == '名詞' || word.pos == '形容詞' || word.pos == '形容動詞') {
+                        if (word.pos == '名詞' || word.pos == '形容動詞') {
                             incrementWord(message.sender, surface);
                         }
                     }

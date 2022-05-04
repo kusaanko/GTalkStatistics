@@ -144,12 +144,18 @@ $('#submit').on('click', function () {
                     let _data = data;
                     let _options = options;
 
-                    $(window).resize(function () {
+                    let resize = function () {
                         var chart = new google.charts.Bar(_div);
                         _options.width = div.parentElement.clientWidth;
                         _options.height = div.parentElement.clientWidth / (window.innerWidth / (window.innerHeight * 0.7));
                         chart.draw(_data, _options);
-                    });
+                    };
+                    let ua = navigator.userAgent;
+                    if ((ua.indexOf('iPhone') > 0 || ua.indexOf('Android') > 0) && ua.indexOf('Mobile') > 0) {
+                        window.addEventListener('orientationchange', resize, false);
+                    } else {
+                        $(window).resize(resize);
+                    }
                 }
                 main_jq.append('<h1>操作方法</h1>');
                 main_jq.append('<p>軸の上にマウスや指を持っていくと細かい数値が読み取れます。右にある軸の名前をクリックやタップするとハイライトできます。</p>');

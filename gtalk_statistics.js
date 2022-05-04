@@ -520,7 +520,7 @@ function drawWordCloud(selector, wordsData) {
     var w = 500;
 
     var countMax = words[0].count;
-    var sizeScale = d3.scaleLinear().domain([0, countMax]).range([2, 150]);
+    var sizeScale = d3.scaleLinear().domain([0, countMax]).range([2, 100]);
     for (let word of words) {
         word.size = sizeScale(word.count);
     }

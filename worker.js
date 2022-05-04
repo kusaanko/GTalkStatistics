@@ -197,12 +197,12 @@ self.addEventListener('message', (msg) => {
                         }else if (word.pos_detail_1 == '非自立' && w.length > 0) {
                             w += surface;
                         }
-                        if (w.length > 0 && word.pos != '動詞' && word.pos != '助動詞' && word.pos != '形容詞') {
+                        if (w.length > 0 && word.pos != '動詞' && word.pos != '助動詞') {
                             incrementWord(message.sender, w);
                             w = '';
                         }
                         if (surface.length <= 1) continue;
-                        if (word.pos == '名詞' || word.pos == '形容動詞') {
+                        if (word.pos == '名詞' || word.pos == '形容詞' || word.pos == '形容動詞') {
                             incrementWord(message.sender, surface);
                         }
                     }

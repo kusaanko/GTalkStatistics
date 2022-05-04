@@ -123,7 +123,7 @@ self.addEventListener('message', (msg) => {
                 all_messages[message.sender].push(message);
                 if (preYear == 0) preYear = year;
                 if (preMonth == 0) preMonth = month;
-                while ((year * 12 + month) - (preYear * 12 + preMonth) > 1) {
+                while ((year * 12 + month) - (preYear * 12 + preMonth) >= 1) {
                     preMonth++;
                     if (preMonth == 13) {
                         preYear++;

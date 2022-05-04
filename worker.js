@@ -60,29 +60,31 @@ self.addEventListener('message', (msg) => {
                             if (text.indexOf('\'') == 0 && text.lastIndexOf('\'') == text.length - 1) {
                                 text = text.substring(1, text.length - 1);
                             }
-                            if (!original_senders.includes(user)) {
-                                original_senders.push(user);
-                            }
-                            if(user_replace[user] != undefined && user_replace[user] != '') {
-                                user = user_replace[user];
-                            }
-                            if (!senders.includes(user)) {
-                                senders.push(user);
-                            }
-                            if(do_user_replace_message) {
-                                // メッセージ内のユーザーの置換
-                                for(let user of Object.keys(user_replace)) {
-                                    text = text.replace(new RegExp(user, 'g'), user_replace[user]);
+                            if(user.length != 0 && text.indexOf("メッセージの送信を取り消しました") == -1) {
+                                if (!original_senders.includes(user)) {
+                                    original_senders.push(user);
                                 }
-                            }else {
-                                // @の置換
-                                if(text.indexOf('@') != -1) {
+                                if(user_replace[user] != undefined && user_replace[user] != '') {
+                                    user = user_replace[user];
+                                }
+                                if (!senders.includes(user)) {
+                                    senders.push(user);
+                                }
+                                if(do_user_replace_message) {
+                                    // メッセージ内のユーザーの置換
                                     for(let user of Object.keys(user_replace)) {
                                         text = text.replace(new RegExp(user, 'g'), user_replace[user]);
                                     }
+                                }else {
+                                    // @の置換
+                                    if(text.indexOf('@') != -1) {
+                                        for(let user of Object.keys(user_replace)) {
+                                            text = text.replace(new RegExp(user, 'g'), user_replace[user]);
+                                        }
+                                    }
                                 }
+                                messages.push(new Message(date, time, user, text));
                             }
-                            messages.push(new Message(date, time, user, text));
                             stock = stock.substr(stock.lastIndexOf('\n') + 1);
                         }
                     }

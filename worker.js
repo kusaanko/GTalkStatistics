@@ -159,7 +159,7 @@ self.addEventListener('message', (msg) => {
                 if (!skipWordSegment) {
                     function incrementWord(sender, word) {
                         // 頻出語は削除
-                        if(['こと','ある','ない','した','する','したら','なる','http','https'].includes(word)) return;
+                        if(['こと','ある','ない','する','いる','いい','なる','http','https'].includes(word)) return;
                         if (statistics[sender].words[word] == undefined) {
                             statistics[sender].words[word] = 0;
                         }
@@ -183,23 +183,16 @@ self.addEventListener('message', (msg) => {
                         }
                         var surface = word.surface_form;
                         surface = surface.replace(/\n/g, '');
+                        // 原形があれば原形を使う
+                        if (word.basic_form != '*') {
+                            surface = word.basic_form;
+                        }
                         // 記号のみは無視
                         if (surface.match(/^[0-9()-+^~|=!"#$%&@.\\/ ?　,:<>`']{1,}$/) != null) {
                             continue;
                         }
-                        // 助動詞があれば動詞につなげる
-                        if (word.pos == '動詞') {
-                            w += surface;
-                        }else if (word.pos == '助動詞' && w.length > 0) {
-                            w += surface;
-                        }else if (word.pos_detail_1 == '接尾' && w.length > 0) {
-                            w += surface;
-                        }else if (word.pos_detail_1 == '非自立' && w.length > 0) {
-                            w += surface;
-                        }
-                        if (w.length > 0 && word.pos != '動詞' && word.pos != '助動詞') {
-                            incrementWord(message.sender, w);
-                            w = '';
+                        if (word.pos == '動詞' && word.pos_detail_1 == '自立') {
+                            incrementWord(message.sender, surface);
                         }
                         if (surface.length <= 1) continue;
                         if (word.pos == '名詞' || word.pos == '形容詞' || word.pos == '形容動詞') {

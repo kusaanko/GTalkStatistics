@@ -191,7 +191,6 @@ $('#submit').on('click', function () {
                 var month_datasets = [];
                 var day_datasets = [];
                 var year_month_datasets = [];
-                console.log(data);
                 for (let year_month of Object.keys(data.statistics.all.year_month)) {
                     for (let sender of data.senders) {
                         if (data.statistics[sender].year_month[year_month] == undefined) {

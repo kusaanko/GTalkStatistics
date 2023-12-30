@@ -159,34 +159,47 @@ $('#submit').on('click', function () {
                 }
                 main_jq.append('<h1>操作方法</h1>');
                 main_jq.append('<p>軸の上にマウスや指を持っていくと細かい数値が読み取れます。右にある軸の名前をクリックやタップするとハイライトできます。</p>');
-                var time_datasets = [
-                    {
-                        label: '全員',
-                        data: Object.values(data.statistics.all.time),
-                        backgroundColor: sender_color.all
+                // var time_datasets = [
+                //     {
+                //         label: '全員',
+                //         data: Object.values(data.statistics.all.time),
+                //         backgroundColor: sender_color.all
+                //     }
+                // ];
+                // var month_datasets = [
+                //     {
+                //         label: '全員',
+                //         data: Object.values(data.statistics.all.month),
+                //         backgroundColor: sender_color.all
+                //     }
+                // ];
+                // var day_datasets = [
+                //     {
+                //         label: '全員',
+                //         data: Object.values(data.statistics.all.day),
+                //         backgroundColor: sender_color.all
+                //     }
+                // ];
+                // var year_month_datasets = [
+                //     {
+                //         label: '全員',
+                //         data: Object.values(data.statistics.all.year_month),
+                //         backgroundColor: sender_color.all
+                //     }
+                // ];
+                var time_datasets = [];
+                var month_datasets = [];
+                var day_datasets = [];
+                var year_month_datasets = [];
+                console.log(data);
+                for (let year_month of Object.keys(data.statistics.all.year_month)) {
+                    for (let sender of data.senders) {
+                        if (data.statistics[sender].year_month[year_month] == undefined) {
+                            data.statistics[sender].year_month[year_month] = 0;
+                        }
+                    
                     }
-                ];
-                var month_datasets = [
-                    {
-                        label: '全員',
-                        data: Object.values(data.statistics.all.month),
-                        backgroundColor: sender_color.all
-                    }
-                ];
-                var day_datasets = [
-                    {
-                        label: '全員',
-                        data: Object.values(data.statistics.all.day),
-                        backgroundColor: sender_color.all
-                    }
-                ];
-                var year_month_datasets = [
-                    {
-                        label: '全員',
-                        data: Object.values(data.statistics.all.year_month),
-                        backgroundColor: sender_color.all
-                    }
-                ];
+                }
                 for (let sender of data.senders) {
                     time_datasets.push({
                         label: sender,
@@ -205,7 +218,7 @@ $('#submit').on('click', function () {
                     });
                     year_month_datasets.push({
                         label: sender,
-                        data: Object.values(data.statistics[sender].year_month),
+                        data: Object.keys(data.statistics.all.year_month).map((year_month) => data.statistics[sender].year_month[year_month]),
                         backgroundColor: sender_color[sender]
                     });
                 }
